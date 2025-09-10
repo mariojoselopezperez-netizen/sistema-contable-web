@@ -1,0 +1,123 @@
+:root {
+  --primary-color: #4A90E2;
+  --secondary-color: #50E3C2;
+  --text-color: #333;
+  --background-color: #f4f7f6;
+  --card-background: #ffffff;
+  --border-color: #e0e0e0;
+  --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Ocupa toda la pantalla */
+.full-page {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+/* Contenedor con dos columnas */
+.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  width: 100%;
+}
+
+/* Columna izquierda: bienvenida con gradiente */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40px;
+  color: white;
+  background: linear-gradient(to bottom right, #4A90E2, #50E3C2);
+  background-size: cover;
+}
+
+.left-column h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.left-column p {
+  font-size: 1.2rem;
+  max-width: 400px;
+}
+
+/* Columna derecha: formulario */
+.right-column {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 40px;
+}
+
+.right-column form {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Estilo para botones y inputs dentro del formulario */
+.right-column input[type="text"],
+.right-column input[type="email"],
+.right-column input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+.right-column input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.right-column button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.right-column button:hover {
+  background-color: #3a7bd5;
+  transform: translateY(-2px);
+}
+
+/* Responsive: para móviles se oculta la parte izquierda */
+@media (max-width: 850px) {
+  .two-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .left-column {
+    display: none;
+  }
+
+  .right-column {
+    padding: 20px;
+  }
+}
