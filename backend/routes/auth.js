@@ -1,63 +1,68 @@
 // backend/routes/auth.js
 
 const express = require('express');
+const { Client } = require('pg');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { Client } = require('pg');
 require('dotenv').config();
 
 const router = express.Router();
+
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
 });
-
-// Asegúrate de conectar el cliente a la base de datos
 client.connect();
 
-// Ruta de registro de usuario
+// Ruta de registro
 router.post('/register', async (req, res) => {
   const { nombre, email, contrasena } = req.body;
-  const hashedPassword = await bcrypt.hash(contrasena, 10); // Encripta la contraseña
-
   try {
-    const result = await client.query(
-      'INSERT INTO usuarios (nombre, email, contrasena) VALUES ($1, $2, $3) RETURNING id, email',
-      [nombre, email, hashedPassword]
+    const hashedPassword = await bcrypt.hash(contrasena, 10);
+    const defaultRol = await client.query('SELECT id FROM roles WHERE nombre = $1', ['usuario']);
+    
+    if (defaultRol.rows.length === 0) {
+      return res.status(500).json({ error: 'Rol predeterminado no encontrado' });
+    }
+    
+    await client.query(
+      'INSERT INTO usuarios (nombre, email, contrasena, rol_id) VALUES ($1, $2, $3, $4)',
+      [nombre, email, hashedPassword, defaultRol.rows[0].id]
     );
-    res.status(201).json({ message: 'Usuario registrado exitosamente', user: result.rows[0] });
+    res.status(201).json({ message: 'Usuario registrado exitosamente' });
   } catch (error) {
     console.error('Error al registrar el usuario:', error);
-    res.status(500).json({ error: 'Error al registrar el usuario' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-// Ruta de inicio de sesión
+// Ruta de inicio de sesión (Login)
 router.post('/login', async (req, res) => {
   const { email, contrasena } = req.body;
   try {
-    const result = await client.query('SELECT * FROM usuarios WHERE email = $1', [email]);
-    const user = result.rows[0];
+    // Consulta para buscar el usuario y su rol. Se usa un JOIN
+    const userResult = await client.query(
+      'SELECT u.id, u.nombre, u.email, u.contrasena, r.nombre AS rol FROM usuarios u JOIN roles r ON u.rol_id = r.id WHERE u.email = $1',
+      [email]
+    );
 
-    if (!user) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    const isMatch = await bcrypt.compare(contrasena, user.contrasena); // Compara contraseñas
+    const user = userResult.rows[0];
+
+    const isMatch = await bcrypt.compare(contrasena, user.contrasena);
+
     if (!isMatch) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    // Crea un token JWT
-    const token = jwt.sign(
-      { id: user.id, email: user.email, rol: user.rol },
-      process.env.JWT_SECRET || 'mi_secreto_super_seguro', // Usa una variable de entorno para el secreto
-      { expiresIn: '1h' }
-    );
+    const token = jwt.sign({ id: user.id, email: user.email, rol: user.rol }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({ message: 'Inicio de sesión exitoso', token });
+    res.json({ token, user: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol } });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
-    res.status(500).json({ error: 'Error al iniciar sesión' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 

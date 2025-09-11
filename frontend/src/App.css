@@ -121,3 +121,46 @@ body {
     padding: 20px;
   }
 }
+
+/* frontend/src/App.css */
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: var(--shadow-light);
+  width: 100%;
+}
+
+.navbar-logo a {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.navbar-links a,
+.navbar-links .logout-button {
+  color: white;
+  text-decoration: none;
+  margin-left: 20px;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.navbar-links a:hover,
+.navbar-links .logout-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.logout-button {
+  font-weight: bold;
+}
