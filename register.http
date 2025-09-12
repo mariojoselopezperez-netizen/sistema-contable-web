@@ -1,0 +1,8 @@
+POST https://effective-space-pancake-4j9vr64grrwwf77j6-3001.app.github.dev/api/auth/register
+Content-Type: application/json
+
+{
+  "nombre": "usuario_de_prueba",
+  "email": "prueba@gmail.com",
+  "contrasena": "123456"
+}

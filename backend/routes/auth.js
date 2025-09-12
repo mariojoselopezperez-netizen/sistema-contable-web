@@ -1,33 +1,39 @@
 // backend/routes/auth.js
 
 const express = require('express');
-const { Client } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const router = express.Router();
 
-const client = new Client({
-  connectionString: process.env.DATABASE_URL,
-});
-client.connect();
+// Configura el cliente de Supabase
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
 // Ruta de registro
 router.post('/register', async (req, res) => {
   const { nombre, email, contrasena } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(contrasena, 10);
-    const defaultRol = await client.query('SELECT id FROM roles WHERE nombre = $1', ['usuario']);
     
-    if (defaultRol.rows.length === 0) {
+    const { data: defaultRol, error: rolError } = await supabase
+      .from('roles')
+      .select('id')
+      .eq('nombre', 'usuario');
+
+    if (rolError || defaultRol.length === 0) {
       return res.status(500).json({ error: 'Rol predeterminado no encontrado' });
     }
     
-    await client.query(
-      'INSERT INTO usuarios (nombre, email, contrasena, rol_id) VALUES ($1, $2, $3, $4)',
-      [nombre, email, hashedPassword, defaultRol.rows[0].id]
-    );
+    const { error: insertError } = await supabase
+      .from('usuarios')
+      .insert([
+        { nombre, email, contrasena: hashedPassword, rol_id: defaultRol[0].id }
+      ]);
+    
+    if (insertError) throw insertError;
+    
     res.status(201).json({ message: 'Usuario registrado exitosamente' });
   } catch (error) {
     console.error('Error al registrar el usuario:', error);
@@ -39,17 +45,17 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, contrasena } = req.body;
   try {
-    // Consulta para buscar el usuario y su rol. Se usa un JOIN
-    const userResult = await client.query(
-      'SELECT u.id, u.nombre, u.email, u.contrasena, r.nombre AS rol FROM usuarios u JOIN roles r ON u.rol_id = r.id WHERE u.email = $1',
-      [email]
-    );
+    const { data: userResult, error } = await supabase
+      .from('usuarios')
+      .select('id, nombre, email, contrasena, rol:roles(nombre)')
+      .eq('email', email);
 
-    if (userResult.rows.length === 0) {
+    if (error) throw error;
+    if (userResult.length === 0) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    const user = userResult.rows[0];
+    const user = userResult[0];
 
     const isMatch = await bcrypt.compare(contrasena, user.contrasena);
 
@@ -57,9 +63,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, rol: user.rol }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, email: user.email, rol: user.rol.nombre }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({ token, user: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol } });
+    res.json({ token, user: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol.nombre } });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
     res.status(500).json({ error: 'Error interno del servidor' });

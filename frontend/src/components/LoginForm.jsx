@@ -14,12 +14,10 @@ function LoginForm({ onLogin }) {
     try {
       // Usa la URL correcta con la ruta completa
       const response = await axios.post(
-        'https://effective-space-pancake-4j9vr64grrwwf77j6-3001.app.github.dev',
-        {
-          email,
-          contrasena,
-        }
-      );
+  'https://effective-space-pancake-4j9vr64grrwwf77j6-3001.app.github.dev/api/auth/login',
+  { email, contrasena }
+);
+
 
       const { token, user } = response.data;
       onLogin(token, user.rol);

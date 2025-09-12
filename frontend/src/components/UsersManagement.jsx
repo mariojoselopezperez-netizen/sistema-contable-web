@@ -1,5 +1,3 @@
-// frontend/src/components/UsersManagement.jsx
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -44,15 +42,17 @@ function UsersManagement() {
   const fetchRoles = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${apiUrl}/roles`, { // Cambiado a /roles
+      const response = await axios.get(`${apiUrl}/users/roles`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
       setRoles(response.data);
+      setLoading(false);
     } catch (error) {
       console.error('Error al cargar los roles:', error);
       setMensaje(error.response?.data?.error || 'Error al cargar la lista de roles.');
+      setLoading(false);
     }
   };
 
@@ -67,7 +67,8 @@ function UsersManagement() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${apiUrl}/auth/register`, newUser, { // Usar la ruta de registro
+      // ✅ Corregido: ruta al backend para crear usuario
+      await axios.post(`${apiUrl}/users/users`, newUser, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -98,7 +99,7 @@ function UsersManagement() {
   };
 
   if (loading) {
-      return <div className="loading">Cargando...</div>;
+    return <div className="loading">Cargando...</div>;
   }
 
   return (
@@ -130,9 +131,10 @@ function UsersManagement() {
                     <tr key={user.id}>
                       <td>{user.nombre}</td>
                       <td>{user.email}</td>
-                      <td>{user.rol}</td>
+                      {/* ✅ Corregido: mostrar rol como viene de Supabase */}
+                      <td>{user.roles?.nombre || 'Sin rol'}</td>
                       <td>
-                          <button onClick={() => handleDelete(user.id)} className="delete-button">Eliminar</button>
+                        <button onClick={() => handleDelete(user.id)} className="delete-button">Eliminar</button>
                       </td>
                     </tr>
                   ))}
