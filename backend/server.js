@@ -20,14 +20,14 @@ app.use(express.json());
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.send('API del sistema contable funcionando!');
-});
+  });
 
-// Rutas reales
-app.use('/api/auth', authRoutes);
-app.use('/api/configuracion', configuracionRoutes);
-// Código corregido
-app.use('/api/users', usersRoutes);
+  // Rutas reales
+  app.use('/api/auth', authRoutes);
+  app.use('/api/configuracion', configuracionRoutes);
+  // Código corregido
+  app.use('/api/users', usersRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${PORT}`);
+    });
